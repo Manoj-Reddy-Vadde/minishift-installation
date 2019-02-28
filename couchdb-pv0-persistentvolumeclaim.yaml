@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: core-couchdb-claim0
+  {% if 'storage_class' in core_couchdb_pv0[K8_STORAGE_TYPE] %}
+  annotations:
+    volume.beta.kubernetes.io/storage-class: {{ core_couchdb_pv0[K8_STORAGE_TYPE].storage_class }}
+  {% endif %}
+spec:
+  {% if ENABLE_DEV_SETTINGS %}
+  # storageClassName is required for Minikube v0.21.0 / Kubernets 1.7
+  #   value must be "standard"
+  # storageClassName: standard
+  {% endif %}
+  accessModes:
+    - {{ K8_STORAGE_ACCESSMODE[K8_STORAGE_TYPE] }}
+  resources:
+    requests:
+      storage: {{ core_couchdb_pv0[K8_STORAGE_TYPE].capacity }}
+  {% if K8_STORAGE_TYPE == 'hostpath' or K8_STORAGE_TYPE == 'nfs' %}
+  {% if ENABLE_EXTERNAL_DB is defined and ENABLE_EXTERNAL_DB|lower == "true" %}
+  volumeName: core-couchdb-pv0-{{ K8_NAMESPACE }}
+  {% else %}
+  volumeName: pv0001
+  {% endif %}
+  {% endif %}
